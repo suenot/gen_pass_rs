@@ -127,14 +127,14 @@ flowchart TD
 
 #### Algorithm Details
 
-* **mixed** – Combines several independent entropy sources: the OS CSPRNG, a ChaCha20 stream cipher RNG seeded from that entropy, and finally `StdRng` re-seeded with SHA-256 of previous bytes. Усиление стойкости за счёт смешивания.
-* **os** – Прямое чтение из системного крипто-стойкого генератора (`/dev/urandom`, `getrandom(2)`, `BCryptGenRandom`). Максимально надёжен, но может быть медленнее на отдельных платформах.
-* **chacha20** – Реализация ChaCha20 stream cipher RNG (IETF variant). Используется в TLS и OpenSSH; обеспечивает высокую скорость и криптостойкость.
-* **hc128** – HC-128 генератор из семейства eSTREAM. Предлагает отличное соотношение скорость/безопасность; подходит для встроенных устройств.
-* **ring** – Обёртка над C-кодом *ring*, использует системный RNG и дополнительно проверяет ошибки; удобен, если проект уже тянет `ring`.
-* **xoshiro** – Семейство Xoshiro/Xoroshiro (non-crypto). Очень быстрый, малое состояние. Не предназначен для паролей, но полезен, когда нужна псевдослучайность без крипто-требований.
-* **pcg64** – Permuted Congruential Generator 64-битной версии. Хорошие статистические свойства, но не криптостойкий.
-* **rdrand** – Использует аппаратную инструкцию Intel/AMD `RDRAND`. Быстро, криптостойко, но работает только на поддерживаемых CPU и зависит от доверия к микрокоду.
+* **mixed** – Combines several independent entropy sources: the OS CSPRNG, a ChaCha20 stream cipher RNG seeded from that entropy, and finally `StdRng` re-seeded with SHA-256 of previous bytes. Enhances security through entropy mixing.
+* **os** – Direct reading from the system cryptographically secure random number generator (`/dev/urandom`, `getrandom(2)`, `BCryptGenRandom`). Maximally reliable, but may be slower on certain platforms.
+* **chacha20** – Implementation of ChaCha20 stream cipher RNG (IETF variant). Used in TLS and OpenSSH; provides high speed and cryptographic strength.
+* **hc128** – HC-128 generator from the eSTREAM family. Offers an excellent speed/security ratio; suitable for embedded devices.
+* **ring** – Wrapper over *ring* C code, uses system RNG and additionally checks for errors; convenient if the project already depends on `ring`.
+* **xoshiro** – Xoshiro/Xoroshiro family (non-crypto). Very fast, small state. Not intended for passwords, but useful when pseudorandomness without crypto requirements is needed.
+* **pcg64** – Permuted Congruential Generator 64-bit version. Good statistical properties, but not cryptographically secure.
+* **rdrand** – Uses the Intel/AMD hardware instruction `RDRAND`. Fast, cryptographically secure, but only works on supported CPUs and depends on trust in microcode.
 
 Select algorithm via CLI flag `-a/--algo`, or by setting `algorithm` field in `PassConfig`.
 
