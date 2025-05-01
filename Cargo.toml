@@ -1,0 +1,22 @@
+[package]
+name = "gen_pass"
+version = "0.1.0"
+edition = "2021"
+authors = ["Eugen Soloviov <suenot@gmail.com>"]
+description = "Secure password generation library and CLI"
+license = "MIT"
+
+[dependencies]
+rand = "0.8"
+rand_chacha = "0.3"
+sha2 = "0.10"
+clap = { version = "4.4", features = ["derive"] }
+anyhow = "1.0"
+
+[lib]
+name = "gen_pass"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gen_pass"
+path = "src/main.rs"
