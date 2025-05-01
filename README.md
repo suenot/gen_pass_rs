@@ -130,66 +130,35 @@ Select algorithm via CLI flag `-a/--algo`, or by setting `algorithm` field in `P
 
 #### mixed
 
-```mermaid
-flowchart LR
-    A[OsRng] --> B[ChaCha20Rng]
-    B --> C[SHA-256]
-    C --> D[StdRng]
-    D --> E[Password bytes]
-```
+**Chain**: OsRng → ChaCha20Rng → SHA-256 → StdRng → Password bytes
 
 #### os
 
-```mermaid
-flowchart LR
-    A[OsRng / getrandom] --> B[Password bytes]
-```
+**Chain**: OsRng / getrandom → Password bytes
 
 #### chacha20
 
-```mermaid
-flowchart LR
-    A[Seed via OsRng] --> B[ChaCha20Rng]
-    B --> C[Password bytes]
-```
+**Chain**: Seed via OsRng → ChaCha20Rng → Password bytes
 
 #### hc128
 
-```mermaid
-flowchart LR
-    A[Seed via OsRng] --> B[Hc128Rng]
-    B --> C[Password bytes]
-```
+**Chain**: Seed via OsRng → Hc128Rng → Password bytes
 
 #### ring
 
-```mermaid
-flowchart LR
-    A[ring::SystemRandom] --> B[Password bytes]
-```
+**Chain**: ring::SystemRandom → Password bytes
 
 #### xoshiro
 
-```mermaid
-flowchart LR
-    A[Seed via OsRng] --> B[Xoshiro256++]
-    B --> C[Password bytes]
-```
+**Chain**: Seed via OsRng → Xoshiro256++ → Password bytes
 
 #### pcg64
 
-```mermaid
-flowchart LR
-    A[Seed via OsRng] --> B[PCG64Mcg]
-    B --> C[Password bytes]
-```
+**Chain**: Seed via OsRng → PCG64Mcg → Password bytes
 
 #### rdrand
 
-```mermaid
-flowchart LR
-    A[CPU RDRAND] --> B[Password bytes]
-```
+**Chain**: CPU RDRAND → Password bytes
 
 ## License
 
