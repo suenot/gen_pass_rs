@@ -1,4 +1,4 @@
-#![allow(unexpected_cfgs, unused_imports, dead_code)]
+#![allow(unused_imports, dead_code)]
 
 //! CLI entry point for gen_pass
 //! Comments in English per user preference.
@@ -85,13 +85,13 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-#[cfg(any(test, coverage))]
+#[cfg(test)]
 fn copy_to_clipboard(_text: &str) -> Result<()> {
     // Stub used during coverage to avoid OS interaction; counts as executed via tests
     Ok(())
 }
 
-#[cfg(all(not(test), not(coverage)))]
+#[cfg(not(test))]
 /// Try to copy text to clipboard using platform tools
 fn copy_to_clipboard(text: &str) -> Result<()> {
     // Skip actual clipboard interaction when env var set (used by tests/CI)
