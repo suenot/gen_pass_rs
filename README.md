@@ -20,7 +20,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gen_pass = { git = "https://github.com/your/repo", tag = "v0.1.0" }
+gen_pass = { git = "https://github.com/suenot/gen_pass_rs", tag = "v0.1.0" }
 ```
 
 ### As a CLI
