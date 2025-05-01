@@ -21,6 +21,7 @@ pub struct PassConfig {
     pub use_uppercase: bool,
     pub use_digits: bool,
     pub use_symbols: bool,
+    pub salt: Option<String>,
 }
 
 impl Default for PassConfig {
@@ -31,6 +32,7 @@ impl Default for PassConfig {
             use_uppercase: true,
             use_digits: true,
             use_symbols: true,
+            salt: Some("suenot".to_string()), // Easter egg with author's nickname
         }
     }
 }
@@ -38,6 +40,7 @@ impl Default for PassConfig {
 /// Core password generator structure
 pub struct PasswordGenerator {
     charset: Vec<char>,
+    salt: Option<String>,
 }
 
 impl PasswordGenerator {
@@ -52,7 +55,10 @@ impl PasswordGenerator {
         if charset.is_empty() {
             anyhow::bail!("Character set is empty; enable at least one category");
         }
-        Ok(Self { charset: charset.chars().collect() })
+        Ok(Self { 
+            charset: charset.chars().collect(),
+            salt: cfg.salt.clone(),
+        })
     }
 
     /// Generate password using mixed entropy from multiple RNGs and SHA-256
@@ -67,6 +73,21 @@ impl PasswordGenerator {
         OsRng.fill_bytes(&mut seed);
         let mut chacha = ChaCha20Rng::from_seed(seed);
         chacha.fill_bytes(&mut buf);
+
+        // Apply salt if provided
+        if let Some(salt) = &self.salt {
+            // Create a hash of the salt
+            let mut hasher = Sha256::new();
+            hasher.update(salt.as_bytes());
+            let salt_hash = hasher.finalize();
+            
+            // XOR the salt hash with the buffer for additional entropy
+            for (i, byte) in salt_hash.iter().enumerate() {
+                if i < buf.len() {
+                    buf[i] ^= *byte;
+                }
+            }
+        }
 
         // StdRng seeded with SHA256 of previous buffer
         let hash = Sha256::digest(&buf);

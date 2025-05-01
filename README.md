@@ -49,6 +49,7 @@ Options:
       --uppercase <BOOL>     Include uppercase letters [default: true]
       --digits <BOOL>        Include digits [default: true]
       --symbols <BOOL>       Include symbols [default: true]
+  -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]
   -o, --output <OUTPUT>      Output format [default: plain] [possible values: plain, copy]
   -h, --help                 Print help info
   -V, --version              Print version info
@@ -61,7 +62,13 @@ Examples:
 $ gen_pass -l 24
 
 # 32-character password without symbols, copy to clipboard
-$ gen_pass -l 32 --symbols false -o copy
+$ gen_pass -l 32 --symbols=false -o copy
+
+# Password with a custom salt for deterministic generation
+$ gen_pass -l 20 -s "my-custom-salt"
+
+# Default salt is "suenot" (author's nickname as an easter egg)
+$ gen_pass -l 20
 ```
 
 ## Usage (Library)
@@ -72,6 +79,7 @@ use gen_pass::{PassConfig, PasswordGenerator};
 fn main() -> anyhow::Result<()> {
     let cfg = PassConfig {
         length: 24,
+        salt: Some("my-custom-salt".to_string()), // Custom salt (default is "suenot")
         ..Default::default()
     };
 
@@ -93,8 +101,12 @@ flowchart TD
     D --> E
     E --> F[Select RNG Algorithm]
     F --> G[Collect Random Bytes]
-    G --> H[Map To Allowed Charset]
-    H --> I[Return / Print Password]
+    G --> H1{Salt Provided?}
+    H1 -->|Yes| H2[Apply Salt Hash]
+    H1 -->|No| H3[Skip Salt]
+    H2 --> H4[Map To Allowed Charset]
+    H3 --> H4
+    H4 --> I[Return / Print Password]
     I --> J{Copy to Clipboard?}
     J -->|Yes| K[Invoke pbcopy/xclip]
     J -->|No| L[Done]

@@ -16,6 +16,12 @@ fn default_generation_length() {
 }
 
 #[test]
+fn default_salt_is_suenot() {
+    let cfg = PassConfig::default();
+    assert_eq!(cfg.salt, Some("suenot".to_string()), "Default salt should be 'suenot'");
+}
+
+#[test]
 fn uppercase_only() {
     let cfg = PassConfig {
         length: 20,
@@ -23,6 +29,7 @@ fn uppercase_only() {
         use_uppercase: true,
         use_digits: false,
         use_symbols: false,
+        salt: None,
     };
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
     let pw = gen.generate(cfg.length);
@@ -37,6 +44,7 @@ fn digits_and_symbols() {
         use_uppercase: false,
         use_digits: true,
         use_symbols: true,
+        salt: None,
     };
     let allowed: String = format!("{}{}", DIGITS, SYMBOLS);
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
@@ -52,6 +60,7 @@ fn error_on_empty_charset() {
         use_uppercase: false,
         use_digits: false,
         use_symbols: false,
+        salt: None,
     };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
 }
@@ -63,4 +72,47 @@ fn randomness() {
     let pw1 = gen.generate(cfg.length);
     let pw2 = gen.generate(cfg.length);
     assert_ne!(pw1, pw2, "two consecutive passwords should differ");
+}
+
+#[test]
+fn salt_changes_output() {
+    // Generate password without salt
+    let cfg_no_salt = PassConfig { length: 16, ..Default::default() };
+    let gen_no_salt = PasswordGenerator::from_config(&cfg_no_salt).unwrap();
+    let pw_no_salt = gen_no_salt.generate(cfg_no_salt.length);
+    
+    // Generate password with salt
+    let cfg_with_salt = PassConfig { 
+        length: 16, 
+        salt: Some("test_salt".to_string()),
+        ..Default::default() 
+    };
+    let gen_with_salt = PasswordGenerator::from_config(&cfg_with_salt).unwrap();
+    let pw_with_salt = gen_with_salt.generate(cfg_with_salt.length);
+    
+    // Same salt should produce different passwords than no salt
+    assert_ne!(pw_no_salt, pw_with_salt, "salt should change password output");
+}
+
+#[test]
+fn different_salts_different_outputs() {
+    // Generate passwords with two different salts
+    let cfg_salt1 = PassConfig { 
+        length: 16, 
+        salt: Some("salt1".to_string()),
+        ..Default::default() 
+    };
+    let gen_salt1 = PasswordGenerator::from_config(&cfg_salt1).unwrap();
+    let pw_salt1 = gen_salt1.generate(cfg_salt1.length);
+    
+    let cfg_salt2 = PassConfig { 
+        length: 16, 
+        salt: Some("salt2".to_string()),
+        ..Default::default() 
+    };
+    let gen_salt2 = PasswordGenerator::from_config(&cfg_salt2).unwrap();
+    let pw_salt2 = gen_salt2.generate(cfg_salt2.length);
+    
+    // Different salts should produce different passwords
+    assert_ne!(pw_salt1, pw_salt2, "different salts should produce different passwords");
 }

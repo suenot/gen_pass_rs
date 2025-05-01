@@ -3,7 +3,7 @@
 //! CLI entry point for gen_pass
 //! Comments in English per user preference.
 
-use clap::{Parser, ValueEnum};
+use clap::{Parser, ValueEnum, ArgAction};
 use anyhow::Result;
 use gen_pass::{PassConfig, PasswordGenerator};
 use std::fmt;
@@ -16,20 +16,24 @@ struct Cli {
     length: usize,
 
     /// Include lowercase letters
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = true, action = ArgAction::Set)]
     lowercase: bool,
 
     /// Include uppercase letters
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = true, action = ArgAction::Set)]
     uppercase: bool,
 
     /// Include digits
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = true, action = ArgAction::Set)]
     digits: bool,
 
     /// Include symbols
-    #[arg(long, default_value_t = true)]
+    #[arg(long, default_value_t = true, action = ArgAction::Set)]
     symbols: bool,
+
+    /// Salt string to modify password generation
+    #[arg(short = 's', long)]
+    salt: Option<String>,
 
     /// Output format
     #[arg(short, long, default_value_t = Output::Plain)]
@@ -65,6 +69,7 @@ fn main() -> Result<()> {
         use_uppercase: cli.uppercase,
         use_digits: cli.digits,
         use_symbols: cli.symbols,
+        salt: cli.salt,
     };
 
     let gen = PasswordGenerator::from_config(&cfg)?;
