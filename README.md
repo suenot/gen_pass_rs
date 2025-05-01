@@ -2,6 +2,8 @@
 
 Secure password generation **library** and **CLI** written in Rust.
 
+[![codecov](https://codecov.io/gh/suenot/gen_pass_rs/branch/master/graph/badge.svg)](https://codecov.io/gh/suenot/gen_pass_rs)
+
 ## Features
 
 - Configurable password length and character sets (lowercase, uppercase, digits, symbols)
