@@ -16,7 +16,7 @@ jobs:
           toolchain: stable
           override: true
       - name: Install cargo-llvm-cov
-        run: cargo install cargo-llvm-cov --version "0.6" --locked
+        run: cargo install cargo-llvm-cov --version "0.6.0" --locked
       - name: Generate coverage report
         run: cargo llvm-cov --workspace --lcov --output-path lcov.info
       - name: Upload to Codecov
