@@ -94,18 +94,21 @@ fn default_guarantees_all_four_types() {
 }
 
 #[test]
-fn min_each_four_gives_at_least_four_of_each() {
-    // 4 of each across 4 categories needs length >= 16.
-    let cfg = PassConfig { length: 17, salt: None, min_per_type: 4, ..Default::default() };
+fn min_each_four_gives_four_distinct_of_each() {
+    // 4 DISTINCT of each across 4 categories needs length >= 16.
+    let cfg = PassConfig { length: 17, salt: None, min_per_type: 4, safe_symbols: true, ..Default::default() };
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
-    for _ in 0..100 {
+    let distinct_in = |pw: &str, set: &str| -> usize {
+        pw.chars().filter(|c| set.contains(*c)).collect::<std::collections::BTreeSet<_>>().len()
+    };
+    for _ in 0..200 {
         let pw = gen.generate(cfg.length);
-        let low = pw.chars().filter(|c| LOWERCASE.contains(*c)).count();
-        let up = pw.chars().filter(|c| UPPERCASE.contains(*c)).count();
-        let dig = pw.chars().filter(|c| DIGITS.contains(*c)).count();
-        let sym = pw.chars().filter(|c| SYMBOLS.contains(*c)).count();
+        let low = distinct_in(&pw, LOWERCASE);
+        let up = distinct_in(&pw, UPPERCASE);
+        let dig = distinct_in(&pw, DIGITS);
+        let sym = distinct_in(&pw, SAFE_SYMBOLS);
         assert!(low >= 4 && up >= 4 && dig >= 4 && sym >= 4,
-            "want >=4 each, got low={low} up={up} dig={dig} sym={sym} in {pw}");
+            "want >=4 distinct each, got low={low} up={up} dig={dig} sym={sym} in {pw}");
     }
 }
 
@@ -113,6 +116,13 @@ fn min_each_four_gives_at_least_four_of_each() {
 fn min_each_too_large_for_length_errors() {
     // 4 of each across 4 categories needs 16 chars; length 15 must fail.
     let cfg = PassConfig { length: 15, min_per_type: 4, ..Default::default() };
+    assert!(PasswordGenerator::from_config(&cfg).is_err());
+}
+
+#[test]
+fn min_each_exceeds_symbol_alphabet_errors() {
+    // Safe symbols only have 8 distinct chars; requiring 9 distinct must fail.
+    let cfg = PassConfig { length: 40, min_per_type: 9, safe_symbols: true, ..Default::default() };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
 }
 

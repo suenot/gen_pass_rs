@@ -51,8 +51,9 @@ Options:
       --symbols <BOOL>       Include symbols [default: true]
       --safe-symbols <BOOL>  Use only basic shell-safe punctuation
                              (!@#$%*+-) [default: false]
-      --min-each <N>         Minimum count from EACH enabled category
-                             (lowercase/uppercase/digits/symbols) [default: 1]
+      --min-each <N>         Minimum DISTINCT characters from EACH enabled
+                             category (lowercase/uppercase/digits/symbols)
+                             [default: 1]
   -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]
   -o, --output <OUTPUT>      Output format [default: plain] [possible values: plain, copy]
   -h, --help                 Print help info
@@ -78,7 +79,7 @@ $ gen_pass -l 20
 # one of every enabled type (lowercase, uppercase, digit, symbol).
 $ gen_pass -l 12
 
-# Require at least 4 of each character type (needs length >= 16)
+# Require at least 4 DISTINCT characters of each type (needs length >= 16)
 $ gen_pass -l 20 --min-each 4
 
 # Only basic, shell-safe punctuation (no \ ; ' < ~ | backtick)

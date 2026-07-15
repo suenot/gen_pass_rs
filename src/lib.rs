@@ -28,10 +28,12 @@ pub struct PassConfig {
     /// instead of the full `SYMBOLS` set.
     pub safe_symbols: bool,
     pub salt: Option<String>,
-    /// Minimum count of characters required from EACH enabled category.
-    /// e.g. 4 means at least 4 lowercase, 4 uppercase, 4 digits, 4 symbols
-    /// (only for enabled categories). Default 1 guarantees every enabled
-    /// type appears at least once. 0 disables the constraint.
+    /// Minimum number of DISTINCT characters required from EACH enabled
+    /// category. e.g. 4 means at least 4 different lowercase, 4 different
+    /// uppercase, 4 different digits, 4 different symbols (only for enabled
+    /// categories). Default 1 guarantees every enabled type appears at least
+    /// once. 0 disables the constraint. Capped by each category's alphabet
+    /// size (e.g. safe symbols have only 8 distinct characters).
     pub min_per_type: usize,
 }
 
@@ -83,10 +85,19 @@ impl PasswordGenerator {
         if cats.is_empty() {
             anyhow::bail!("Character set is empty; enable at least one category");
         }
+        // Each category must be able to supply `min_per_type` DISTINCT chars.
+        if let Some(smallest) = cats.iter().map(|c| c.chars.len()).min() {
+            if cfg.min_per_type > smallest {
+                anyhow::bail!(
+                    "min_per_type={} exceeds the smallest enabled alphabet size ({}); lower min_each or use a larger symbol set",
+                    cfg.min_per_type, smallest
+                );
+            }
+        }
         let required_min = cfg.min_per_type * cats.len();
         if required_min > cfg.length {
             anyhow::bail!(
-                "length={} is too short: min_per_type={} across {} categories needs at least {} characters",
+                "length={} is too short: min_each={} across {} categories needs at least {} characters",
                 cfg.length, cfg.min_per_type, cats.len(), required_min
             );
         }
@@ -149,36 +160,61 @@ impl PasswordGenerator {
         password.into_iter().collect()
     }
 
-    /// Ensure each enabled category appears at least `min_per_type` times.
-    /// Overwrites only positions held by a category that is above its own
-    /// minimum, so no other category is ever pushed below the requirement.
+    /// Ensure each enabled category contributes at least `min_per_type`
+    /// DISTINCT characters. Overwrites only "safe" positions — a duplicated
+    /// character, or a character in a category that already has more distinct
+    /// characters than required — so no category is ever pushed below its
+    /// requirement. Deterministic given the RNG stream (salt reproducibility).
     fn enforce_min_per_type(&self, password: &mut [char], rng: &mut StdRng) {
+        use std::collections::{BTreeSet, HashMap};
         let need = self.min_per_type;
         if need == 0 {
             return;
         }
         loop {
-            let mut counts = vec![0usize; self.cats.len()];
+            // Distinct characters per category, and total count per character.
+            let mut distinct: Vec<BTreeSet<char>> = vec![BTreeSet::new(); self.cats.len()];
+            let mut char_count: HashMap<char, usize> = HashMap::new();
             for &c in password.iter() {
+                *char_count.entry(c).or_insert(0) += 1;
                 if let Some(i) = category_of(c, &self.cats) {
-                    counts[i] += 1;
+                    distinct[i].insert(c);
                 }
             }
-            // Find a category still short of its minimum.
-            let deficient = match counts.iter().position(|&n| n < need) {
+
+            // Find a category short of its distinct-character minimum.
+            let deficient = match (0..self.cats.len()).find(|&i| distinct[i].len() < need) {
                 Some(i) => i,
                 None => break,
             };
-            // Find a position whose category has a surplus (above its minimum).
-            let pos = match (0..password.len()).find(|&p| {
-                category_of(password[p], &self.cats).map_or(true, |i| counts[i] > need)
-            }) {
+
+            // Pick a new distinct character for that category (guaranteed to
+            // exist: alphabet size >= need > current distinct count).
+            let alphabet = &self.cats[deficient].chars;
+            let unused: Vec<char> = alphabet
+                .iter()
+                .copied()
+                .filter(|c| !distinct[deficient].contains(c))
+                .collect();
+            let new_char = unused[(rng.next_u32() as usize) % unused.len()];
+
+            // Choose a safe position to overwrite:
+            //  A) a duplicated character (removing one copy keeps distinct), else
+            //  B) a character whose category has more distinct than required.
+            let pos = (0..password.len())
+                .find(|&p| char_count.get(&password[p]).copied().unwrap_or(0) > 1)
+                .or_else(|| {
+                    (0..password.len()).find(|&p| {
+                        category_of(password[p], &self.cats)
+                            .map_or(true, |j| distinct[j].len() > need)
+                    })
+                });
+            let pos = match pos {
                 Some(p) => p,
-                // Should be unreachable given length validation, but bail safely.
+                // Unreachable given length/alphabet validation; bail safely.
                 None => break,
             };
-            let alphabet = &self.cats[deficient].chars;
-            password[pos] = alphabet[(rng.next_u32() as usize) % alphabet.len()];
+            password[pos] = new_char;
         }
     }
 }

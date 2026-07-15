@@ -35,9 +35,10 @@ struct Cli {
     #[arg(long, default_value_t = false, action = ArgAction::Set)]
     safe_symbols: bool,
 
-    /// Minimum count of characters from EACH enabled category
+    /// Minimum number of DISTINCT characters from EACH enabled category
     /// (lowercase, uppercase, digits, symbols). Default 1 guarantees
-    /// every enabled type appears at least once.
+    /// every enabled type appears at least once. Capped by alphabet size
+    /// (safe symbols have only 8 distinct characters).
     #[arg(long, default_value_t = 1)]
     min_each: usize,
 
