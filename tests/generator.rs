@@ -1,10 +1,16 @@
 //! Tests for gen_pass library
 //! Comments in English per user preference.
 
-use gen_pass::{PassConfig, PasswordGenerator, UPPERCASE, DIGITS, SYMBOLS};
+use gen_pass::{PassConfig, PasswordGenerator, LOWERCASE, UPPERCASE, DIGITS, SYMBOLS};
 
 fn charset_only_contains(password: &str, allowed: &str) {
     assert!(password.chars().all(|c| allowed.contains(c)), "password contains disallowed characters");
+}
+
+/// Count how many of the four categories appear in the password.
+fn distinct_types(password: &str) -> usize {
+    let cats = [LOWERCASE, UPPERCASE, DIGITS, SYMBOLS];
+    cats.iter().filter(|set| password.chars().any(|c| set.contains(c))).count()
 }
 
 #[test]
@@ -30,6 +36,7 @@ fn uppercase_only() {
         use_digits: false,
         use_symbols: false,
         salt: None,
+        min_types: 1,
     };
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
     let pw = gen.generate(cfg.length);
@@ -45,6 +52,7 @@ fn digits_and_symbols() {
         use_digits: true,
         use_symbols: true,
         salt: None,
+        min_types: 2,
     };
     let allowed: String = format!("{}{}", DIGITS, SYMBOLS);
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
@@ -61,6 +69,36 @@ fn error_on_empty_charset() {
         use_digits: false,
         use_symbols: false,
         salt: None,
+        min_types: 0,
+    };
+    assert!(PasswordGenerator::from_config(&cfg).is_err());
+}
+
+#[test]
+fn enforces_min_three_types() {
+    // Rule: at least three of uppercase, lowercase, digits, symbols.
+    for len in 8..=20 {
+        let cfg = PassConfig { length: len, salt: None, ..Default::default() };
+        let gen = PasswordGenerator::from_config(&cfg).unwrap();
+        for _ in 0..50 {
+            let pw = gen.generate(cfg.length);
+            assert_eq!(pw.len(), len);
+            assert!(!pw.contains(' '), "password must not contain spaces");
+            assert!(distinct_types(&pw) >= 3, "expected >=3 types, got {} in {pw}", distinct_types(&pw));
+        }
+    }
+}
+
+#[test]
+fn min_types_exceeds_categories_errors() {
+    let cfg = PassConfig {
+        length: 16,
+        use_lowercase: true,
+        use_uppercase: false,
+        use_digits: false,
+        use_symbols: false,
+        salt: None,
+        min_types: 3,
     };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
 }

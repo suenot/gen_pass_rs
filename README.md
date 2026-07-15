@@ -49,6 +49,8 @@ Options:
       --uppercase <BOOL>     Include uppercase letters [default: true]
       --digits <BOOL>        Include digits [default: true]
       --symbols <BOOL>       Include symbols [default: true]
+      --min-types <N>        Minimum distinct character types required
+                             (uppercase/lowercase/digits/symbols) [default: 3]
   -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]
   -o, --output <OUTPUT>      Output format [default: plain] [possible values: plain, copy]
   -h, --help                 Print help info
@@ -69,6 +71,13 @@ $ gen_pass -l 20 -s "my-custom-salt"
 
 # Default salt is "suenot" (author's nickname as an easter egg)
 $ gen_pass -l 20
+
+# Satisfy strict site rules (8-20 chars, at least 3 of the 4 character types).
+# The default already guarantees >=3 distinct types.
+$ gen_pass -l 12
+
+# Require all four character types
+$ gen_pass -l 16 --min-types 4
 ```
 
 ## Usage (Library)
