@@ -12,6 +12,9 @@ pub const LOWERCASE: &str = "abcdefghijklmnopqrstuvwxyz";
 pub const UPPERCASE: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 pub const DIGITS: &str = "0123456789";
 pub const SYMBOLS: &str = r#"!@#$%^&*()-_=+[]{};:'\",.<>/?`~|\\"#;
+/// Basic punctuation subset: widely accepted by sites, shell-safe, no
+/// ambiguous or escape-prone characters.
+pub const SAFE_SYMBOLS: &str = "!@#$%^&*-_+=?";
 
 /// Password generator configuration
 #[derive(Debug, Clone)]
@@ -21,6 +24,9 @@ pub struct PassConfig {
     pub use_uppercase: bool,
     pub use_digits: bool,
     pub use_symbols: bool,
+    /// Use only the basic, shell-safe punctuation subset (`SAFE_SYMBOLS`)
+    /// instead of the full `SYMBOLS` set.
+    pub safe_symbols: bool,
     pub salt: Option<String>,
     /// Minimum number of distinct character categories that must appear
     /// in the generated password (uppercase, lowercase, digits, symbols).
@@ -36,6 +42,7 @@ impl Default for PassConfig {
             use_uppercase: true,
             use_digits: true,
             use_symbols: true,
+            safe_symbols: false,
             salt: Some("suenot".to_string()), // Easter egg with author's nickname
             min_types: 3,
         }
@@ -67,7 +74,10 @@ impl PasswordGenerator {
         if cfg.use_lowercase { cats.push(Category { chars: LOWERCASE.chars().collect() }); }
         if cfg.use_uppercase { cats.push(Category { chars: UPPERCASE.chars().collect() }); }
         if cfg.use_digits    { cats.push(Category { chars: DIGITS.chars().collect() }); }
-        if cfg.use_symbols   { cats.push(Category { chars: SYMBOLS.chars().collect() }); }
+        if cfg.use_symbols   {
+            let set = if cfg.safe_symbols { SAFE_SYMBOLS } else { SYMBOLS };
+            cats.push(Category { chars: set.chars().collect() });
+        }
 
         if cats.is_empty() {
             anyhow::bail!("Character set is empty; enable at least one category");

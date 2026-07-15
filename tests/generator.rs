@@ -1,7 +1,7 @@
 //! Tests for gen_pass library
 //! Comments in English per user preference.
 
-use gen_pass::{PassConfig, PasswordGenerator, LOWERCASE, UPPERCASE, DIGITS, SYMBOLS};
+use gen_pass::{PassConfig, PasswordGenerator, LOWERCASE, UPPERCASE, DIGITS, SYMBOLS, SAFE_SYMBOLS};
 
 fn charset_only_contains(password: &str, allowed: &str) {
     assert!(password.chars().all(|c| allowed.contains(c)), "password contains disallowed characters");
@@ -35,6 +35,7 @@ fn uppercase_only() {
         use_uppercase: true,
         use_digits: false,
         use_symbols: false,
+        safe_symbols: false,
         salt: None,
         min_types: 1,
     };
@@ -51,6 +52,7 @@ fn digits_and_symbols() {
         use_uppercase: false,
         use_digits: true,
         use_symbols: true,
+        safe_symbols: false,
         salt: None,
         min_types: 2,
     };
@@ -68,6 +70,7 @@ fn error_on_empty_charset() {
         use_uppercase: false,
         use_digits: false,
         use_symbols: false,
+        safe_symbols: false,
         salt: None,
         min_types: 0,
     };
@@ -97,10 +100,25 @@ fn min_types_exceeds_categories_errors() {
         use_uppercase: false,
         use_digits: false,
         use_symbols: false,
+        safe_symbols: false,
         salt: None,
         min_types: 3,
     };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
+}
+
+#[test]
+fn safe_symbols_only_uses_basic_punctuation() {
+    let cfg = PassConfig { length: 20, safe_symbols: true, salt: None, ..Default::default() };
+    let allowed: String = format!("{LOWERCASE}{UPPERCASE}{DIGITS}{SAFE_SYMBOLS}");
+    let gen = PasswordGenerator::from_config(&cfg).unwrap();
+    for _ in 0..100 {
+        let pw = gen.generate(cfg.length);
+        charset_only_contains(&pw, &allowed);
+        // No characters from the full set that are absent from the safe set.
+        assert!(!pw.chars().any(|c| SYMBOLS.contains(c) && !SAFE_SYMBOLS.contains(c)),
+            "unsafe symbol leaked: {pw}");
+    }
 }
 
 #[test]

@@ -49,6 +49,8 @@ Options:
       --uppercase <BOOL>     Include uppercase letters [default: true]
       --digits <BOOL>        Include digits [default: true]
       --symbols <BOOL>       Include symbols [default: true]
+      --safe-symbols <BOOL>  Use only basic shell-safe punctuation
+                             (!@#$%^&*-_+=?) [default: false]
       --min-types <N>        Minimum distinct character types required
                              (uppercase/lowercase/digits/symbols) [default: 3]
   -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]
@@ -78,6 +80,9 @@ $ gen_pass -l 12
 
 # Require all four character types
 $ gen_pass -l 16 --min-types 4
+
+# Only basic, shell-safe punctuation (no \ ; ' < ~ | backtick)
+$ gen_pass -l 20 --safe-symbols true
 ```
 
 ## Usage (Library)

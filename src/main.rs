@@ -31,6 +31,10 @@ struct Cli {
     #[arg(long, default_value_t = true, action = ArgAction::Set)]
     symbols: bool,
 
+    /// Use only basic, shell-safe punctuation (!@#$%^&*-_+=?)
+    #[arg(long, default_value_t = false, action = ArgAction::Set)]
+    safe_symbols: bool,
+
     /// Minimum number of distinct character types required
     /// (uppercase, lowercase, digits, symbols). Many sites require at least 3.
     #[arg(long, default_value_t = 3)]
@@ -74,6 +78,7 @@ fn main() -> Result<()> {
         use_uppercase: cli.uppercase,
         use_digits: cli.digits,
         use_symbols: cli.symbols,
+        safe_symbols: cli.safe_symbols,
         salt: cli.salt,
         min_types: cli.min_types,
     };
