@@ -51,8 +51,8 @@ Options:
       --symbols <BOOL>       Include symbols [default: true]
       --safe-symbols <BOOL>  Use only basic shell-safe punctuation
                              (!@#$%*+-) [default: false]
-      --min-types <N>        Minimum distinct character types required
-                             (uppercase/lowercase/digits/symbols) [default: 3]
+      --min-each <N>         Minimum count from EACH enabled category
+                             (lowercase/uppercase/digits/symbols) [default: 1]
   -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]
   -o, --output <OUTPUT>      Output format [default: plain] [possible values: plain, copy]
   -h, --help                 Print help info
@@ -74,12 +74,12 @@ $ gen_pass -l 20 -s "my-custom-salt"
 # Default salt is "suenot" (author's nickname as an easter egg)
 $ gen_pass -l 20
 
-# Satisfy strict site rules (8-20 chars, at least 3 of the 4 character types).
-# The default already guarantees >=3 distinct types.
+# Satisfy strict site rules (8-20 chars). The default guarantees at least
+# one of every enabled type (lowercase, uppercase, digit, symbol).
 $ gen_pass -l 12
 
-# Require all four character types
-$ gen_pass -l 16 --min-types 4
+# Require at least 4 of each character type (needs length >= 16)
+$ gen_pass -l 20 --min-each 4
 
 # Only basic, shell-safe punctuation (no \ ; ' < ~ | backtick)
 $ gen_pass -l 20 --safe-symbols true

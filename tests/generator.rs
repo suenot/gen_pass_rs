@@ -37,7 +37,7 @@ fn uppercase_only() {
         use_symbols: false,
         safe_symbols: false,
         salt: None,
-        min_types: 1,
+        min_per_type: 1,
     };
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
     let pw = gen.generate(cfg.length);
@@ -54,7 +54,7 @@ fn digits_and_symbols() {
         use_symbols: true,
         safe_symbols: false,
         salt: None,
-        min_types: 2,
+        min_per_type: 2,
     };
     let allowed: String = format!("{}{}", DIGITS, SYMBOLS);
     let gen = PasswordGenerator::from_config(&cfg).unwrap();
@@ -72,14 +72,15 @@ fn error_on_empty_charset() {
         use_symbols: false,
         safe_symbols: false,
         salt: None,
-        min_types: 0,
+        min_per_type: 0,
     };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
 }
 
 #[test]
-fn enforces_min_three_types() {
-    // Rule: at least three of uppercase, lowercase, digits, symbols.
+fn default_guarantees_all_four_types() {
+    // Default min_per_type=1 with all categories on => every type present,
+    // which also satisfies the "at least three types" site rule.
     for len in 8..=20 {
         let cfg = PassConfig { length: len, salt: None, ..Default::default() };
         let gen = PasswordGenerator::from_config(&cfg).unwrap();
@@ -87,23 +88,31 @@ fn enforces_min_three_types() {
             let pw = gen.generate(cfg.length);
             assert_eq!(pw.len(), len);
             assert!(!pw.contains(' '), "password must not contain spaces");
-            assert!(distinct_types(&pw) >= 3, "expected >=3 types, got {} in {pw}", distinct_types(&pw));
+            assert_eq!(distinct_types(&pw), 4, "expected all 4 types, got {} in {pw}", distinct_types(&pw));
         }
     }
 }
 
 #[test]
-fn min_types_exceeds_categories_errors() {
-    let cfg = PassConfig {
-        length: 16,
-        use_lowercase: true,
-        use_uppercase: false,
-        use_digits: false,
-        use_symbols: false,
-        safe_symbols: false,
-        salt: None,
-        min_types: 3,
-    };
+fn min_each_four_gives_at_least_four_of_each() {
+    // 4 of each across 4 categories needs length >= 16.
+    let cfg = PassConfig { length: 17, salt: None, min_per_type: 4, ..Default::default() };
+    let gen = PasswordGenerator::from_config(&cfg).unwrap();
+    for _ in 0..100 {
+        let pw = gen.generate(cfg.length);
+        let low = pw.chars().filter(|c| LOWERCASE.contains(*c)).count();
+        let up = pw.chars().filter(|c| UPPERCASE.contains(*c)).count();
+        let dig = pw.chars().filter(|c| DIGITS.contains(*c)).count();
+        let sym = pw.chars().filter(|c| SYMBOLS.contains(*c)).count();
+        assert!(low >= 4 && up >= 4 && dig >= 4 && sym >= 4,
+            "want >=4 each, got low={low} up={up} dig={dig} sym={sym} in {pw}");
+    }
+}
+
+#[test]
+fn min_each_too_large_for_length_errors() {
+    // 4 of each across 4 categories needs 16 chars; length 15 must fail.
+    let cfg = PassConfig { length: 15, min_per_type: 4, ..Default::default() };
     assert!(PasswordGenerator::from_config(&cfg).is_err());
 }
 

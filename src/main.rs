@@ -35,10 +35,11 @@ struct Cli {
     #[arg(long, default_value_t = false, action = ArgAction::Set)]
     safe_symbols: bool,
 
-    /// Minimum number of distinct character types required
-    /// (uppercase, lowercase, digits, symbols). Many sites require at least 3.
-    #[arg(long, default_value_t = 3)]
-    min_types: usize,
+    /// Minimum count of characters from EACH enabled category
+    /// (lowercase, uppercase, digits, symbols). Default 1 guarantees
+    /// every enabled type appears at least once.
+    #[arg(long, default_value_t = 1)]
+    min_each: usize,
 
     /// Salt string to modify password generation
     #[arg(short = 's', long)]
@@ -80,7 +81,7 @@ fn main() -> Result<()> {
         use_symbols: cli.symbols,
         safe_symbols: cli.safe_symbols,
         salt: cli.salt,
-        min_types: cli.min_types,
+        min_per_type: cli.min_each,
     };
 
     let gen = PasswordGenerator::from_config(&cfg)?;
