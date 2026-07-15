@@ -1,6 +1,6 @@
 [package]
 name = "gen_pass"
-version = "0.1.9"
+version = "0.1.10"
 edition = "2021"
 authors = ["Eugen Soloviov <suenot@gmail.com>"]
 description = "Secure password generation library and CLI"

@@ -50,7 +50,7 @@ Options:
       --digits <BOOL>        Include digits [default: true]
       --symbols <BOOL>       Include symbols [default: true]
       --safe-symbols <BOOL>  Use only basic shell-safe punctuation
-                             (!@#$%*()_+-=) [default: false]
+                             (!@#$%*+-) [default: false]
       --min-types <N>        Minimum distinct character types required
                              (uppercase/lowercase/digits/symbols) [default: 3]
   -s, --salt <SALT>          Salt string to modify password generation [default: "suenot"]

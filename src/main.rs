@@ -31,7 +31,7 @@ struct Cli {
     #[arg(long, default_value_t = true, action = ArgAction::Set)]
     symbols: bool,
 
-    /// Use only basic, shell-safe punctuation (!@#$%*()_+-=)
+    /// Use only basic, shell-safe punctuation (!@#$%*+-)
     #[arg(long, default_value_t = false, action = ArgAction::Set)]
     safe_symbols: bool,
 

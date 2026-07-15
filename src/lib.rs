@@ -14,7 +14,7 @@ pub const DIGITS: &str = "0123456789";
 pub const SYMBOLS: &str = r#"!@#$%^&*()-_=+[]{};:'\",.<>/?`~|\\"#;
 /// Basic punctuation subset: widely accepted by sites, shell-safe, no
 /// ambiguous or escape-prone characters.
-pub const SAFE_SYMBOLS: &str = "!@#$%*()_+-=";
+pub const SAFE_SYMBOLS: &str = "!@#$%*+-";
 
 /// Password generator configuration
 #[derive(Debug, Clone)]
